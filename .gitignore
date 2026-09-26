@@ -47,7 +47,9 @@ DerivedDataCache/
 
 # Plugin generated folders
 Plugins/**/Binaries/
+Plugins/**/Binariess/
 Plugins/**/Intermediate/
+Plugins/**/Intermediates/
 
 # Builds
 Build/*
@@ -66,3 +68,5 @@ Build/*/**
 # Precompiled source art
 SourceArt/**/*.png
 SourceArt/**/*.tga
+
+desktop.ini
