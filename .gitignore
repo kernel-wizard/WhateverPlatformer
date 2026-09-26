@@ -1,0 +1,68 @@
+# Visual Studio
+.vs/
+
+# Compiled object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled headers
+*.gch
+*.pch
+
+# Compiled dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+*.ipa
+
+# Generated project files
+*.xcodeproj
+*.xcworkspace
+*.sln
+*.suo
+*.opensdf
+*.sdf
+*.VC.db
+*.VC.opendb
+.vsconfig
+
+# Project generated folders
+Binaries/
+Intermediate/
+Saved/
+DerivedDataCache/
+
+# Plugin generated folders
+Plugins/**/Binaries/
+Plugins/**/Intermediate/
+
+# Builds
+Build/*
+
+# Keep PakBlacklist files
+!Build/*/
+Build/*/**
+!Build/*/PakBlacklist*.txt
+
+# Keep icons
+!Build/**/*.ico
+
+# Built map data
+*_BuiltData.uasset
+
+# Precompiled source art
+SourceArt/**/*.png
+SourceArt/**/*.tga
