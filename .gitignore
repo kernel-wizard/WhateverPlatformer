@@ -47,9 +47,7 @@ DerivedDataCache/
 
 # Plugin generated folders
 Plugins/**/Binaries/
-Plugins/**/Binariess/
 Plugins/**/Intermediate/
-Plugins/**/Intermediates/
 
 # Builds
 Build/*
