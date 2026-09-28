@@ -18,7 +18,7 @@
 		},
 		{
 			"Name": "ClaudeAssistant",
-			"Enabled": true
+			"Enabled": false
 		},
 		{
 			"Name": "RootMovement",
