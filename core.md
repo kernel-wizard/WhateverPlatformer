@@ -148,6 +148,7 @@ Compare rooms **relative to each other**. Absolute times depend on the tester's 
 ### 2.4 Depth (Y) bands [LOCKED]
 | Y | Content |
 |---|---|
+| +3 | Foreground FX (e.g. the player's ZzzBubble; MASKED material so translucent parallax can't cover it); added 2026-10-03 |
 | +0.04 … +2.0 | Enemies (random per instance at BeginPlay, anti z-fighting) |
 | +1 | Pickups, trap sprites, WaterDrip |
 | +0.05 | Player sprite |
@@ -157,6 +158,7 @@ Compare rooms **relative to each other**. Absolute times depend on the tester's 
 | −200 | Parallax Background |
 | −300 | Backdrop |
 Gameplay actors at **world Y = 0**; movement plane-constrained (normal Y, `SnapToPlaneAtStart=false`).
+- **Translucent sort rule** (user-confirmed 2026-10-03): translucent objects sort by distance from the camera to their bounds centre, and the parallax planes' centre is the room centre. So any TRANSLUCENT FX in front of the parallax (e.g. BgParticles, `TranslucencySortPriority 1`) needs **sort priority > 0** (parallax/backdrop stay 0) or a **Masked** material; otherwise it vanishes behind the parallax when it's >~400 u off the room centre. Set it on placed instances too (Python template edits don't propagate). Small background FX must also avoid spots behind front sprites (pickups, drips, traps at Y +1).
 
 ### 2.5 Collision [LOCKED]
 - Custom channel **`Projectile` = ECC_GameTraceChannel1, default Block** (never change).
