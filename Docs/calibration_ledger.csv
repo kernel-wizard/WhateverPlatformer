@@ -1,0 +1,5 @@
+Level,Room,Fruit,Kills,Max,Reward,Time_s,Damage,Deaths,Status,Note
+1,0,160,70,230,0,25.4,0,0,calibrated,full-clear monitor run 2026-10-05 (Saved/Logs/calib_runs.csv); kills 3 Crab 30 + Bat 20 + Lizard 20
+1,1,215,70,285,0,31.9,1,0,calibrated,full-clear monitor run 2026-10-05; Bat_TierC removed + pit compacted + pocket fruit -> 4 route Apples + Cherries_ShaftBat
+1,2,285,170,455,100,40.1,1,0,calibrated,full-clear monitor run 2026-10-05; kills Eye 30 + Warden 100 + 2 Crab 20 + Bat 20; Reward = Warden 100 (option A)
+2,0,220,90,310,0,39.3,0.7,0,calibrated,playtest 2 avg of 3 runs (2026-10-05)
