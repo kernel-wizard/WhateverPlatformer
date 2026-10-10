@@ -4,6 +4,8 @@
 > Compiled 2026-10-02 from the live project (DefaultEngine.ini, asset CDOs, placed actors in MAP_Level1) and every
 > design/calibration decision the user approved so far. Coherence pass 2026-10-05 (Bat score, kill formula, milestone
 > label, ladder notes, L2 live knobs, Black Bat row, HUD heart limit, level damage budgets).
+> Scaling rework 2026-10-07: 12 levels ≈ 1 h, 60 s room cap, intensity growth between levels, score plateau after L5,
+> milestones M7–M12, HP cap 14, damage cap (§1.3, §1.6–1.8). Threat definition + L1 density 2.5 added 2026-10-07.
 > If memory is lost: READ THIS FILE FIRST. If a live value differs from this file, the live value wins. Report the
 > difference to the user and update this file once the user confirms.
 > Status tags: **[LOCKED]** never change without explicit user approval · **[LIVE]** the current value in the project ·
@@ -25,6 +27,7 @@
 | Maps | `/Game/Maps/MAP_Level1` (GameDefaultMap + EditorStartupMap), `/Game/Maps/MAP_Level2`, `/Game/Maps/MAP_Debug` (safe sandbox) |
 | Old names | "MAP_2DStage" in older notes = **MAP_Level1**. "TM_Stage_2" in older notes = the tilemap now named **TM_Stage_1** (`/Game/PaperAssets/Environment/Level_1/TM_Stage_1`, 120x23), used by the actor `TM_Stage_1` in MAP_Level1 |
 | Calibration ledger | `Docs/calibration_ledger.csv` (one row per room) + `Docs/check_calibration.ps1` (cross-checks the ledger against this file; exit code = FAIL count) |
+| Game length | **12 levels ≈ 1 h** first play (§1.8) |
 
 ---
 
@@ -50,19 +53,35 @@ Compare rooms **relative to each other**. Absolute times depend on the tester's 
 **Level 2 ladder** (same tester, single shots = average L2 player: 11 HP, no Spread):
 | Room | Time | Damage | Deaths | Max score | New mechanic |
 |---|---|---|---|---|---|
-| L2 R0 | 39 s | 0–1 | 0 | 310 | spikes (+ Crystal Bat chaser 3 HP, Crystal Crab walk 150) |
-- L2 R0 vs L1 R0: time +30 %, score +35 % (≈ the ×1.3 level step).
+| L2 R0 | 35 s | 0–1 | 0 | 310 | spikes (+ Crystal Bat chaser 3 HP, Crystal Crab walk 150) |
+| L2 R1 | 37 s | 1 | 0 | 380 | crumble tiles (3 s stand); 13 threats; TIME EXCEPTION, see §1.3 |
+| L2 R2 | 51 s | 0–1 | 0 | 570 | hammer break + floor-drop shortcut (+ Warden mini-boss); 16 threats; TIME EXCEPTION, see §1.3 |
 
 ### 1.3 Scaling formulas
-- **Each room ≈ +20–30 % over the previous room** (time, threat count, score). [LOCKED]
+- **Game length** (user-approved 2026-10-07): **12 levels ≈ 1 h** first play (real time ≈ tester clean time × 1.5–2.2). Per-level targets in §1.8. [LOCKED]
+- **Each room ≈ +20–30 % over the previous room WITHIN a level** (time, threat count, score). Each level's R0 ≈ ×1.1 the previous level's R0 (sawtooth). **Room time cap 60 s.** [LOCKED 2026-10-07]
+- **Between levels, growth = intensity**, not length: threat density (threats per 10 s, cap ~6), precision (narrower platforms, shorter safe windows), level knobs, mechanic combos. Growth rate shrinks: L1–5 +20–30 %/level, L6–9 +10–15 %, L10–12 +5–8 %. [LOCKED 2026-10-07]
+- **Time exception L2 R1** (user-approved 2026-10-07, this room only): crumble tiles reward speed, so R1 is only +6 % over R0 (score +23 %, threats +30 %, damage OK). The next room's TIME target uses a nominal R1 = R0 × 1.25 ≈ 43.6 s → L2 R2 52–57 s. **Time exception L2 R2** (user-approved 2026-10-08, this room only): 51.4 s = +18 % over the nominal R1 (fell short because of practice on ~20 repeat runs; inside the 60 s cap, −7 % vs the §1.8 plan; damage/score/threats pass). No other exceptions; future rooms must meet +20–30 % time through layout (up to the 60 s cap).
+- **Threat-growth exception L1** (user-approved 2026-10-07): L1 was calibrated before the threat definition existed, so its room-to-room threat growth (5 → 9 → 10, +80 % / +11 %) is reported as INFO, not WARN. Level 1 only; from L2 on, threats must grow +20–30 % per room.
 - Mini-boss / grand-secret rewards (Warden 100, Obsidian 100) are EXCLUDED from the room-growth comparison; they still count toward the level budget. (Option A, 2026-10-05)
-- **Exactly 1 new mechanic per room**, and at most 1 new idea per section. [LOCKED]
-- Time targets: R0 30 s → R1 35–45 s → R2 45–60 s. A whole level ≈ 2–2.5 min.
-- Damage budget per room: **(room + 1) + (level − 1)** → L1: R0 ≤1, R1 ≤2, R2 ≤3. Level budget = sum of its rooms: **L1 6 (of 10 HP), L2 9 (of 11 HP), L3 12 (of 11 HP)**. From L3 the level budget exceeds max HP, so it only works with checkpoint deaths or heals [PLAN: decide before L3]. Deaths 0–1 per room in L1–L2, up to 1–2 per room from L3+.
+- **New mechanics:** exactly 1 per room in L1–L3; from L4, 1 new per level (in R0), and R1/R2 introduce a new COMBINATION of known mechanics. At most 1 new idea per section. ~1 new enemy per level; a mini-boss at each level end, final boss in L12. [LOCKED 2026-10-07]
+- Time targets: L1 R0 30 s → R1 35–45 s → R2 45–60 s. From L3: ~40 / 50 / 60 s, a level ≈ 2.5 min clean (~4.5–5.5 min real).
+- Damage budget: room ≤ **4**. L1 1/2/3 (= 6), L2 2/3/4 (= 9); from L3 the level budget = **min(start HP − 2, 12)**; per-level split in §1.8. Deaths 0–1 per room in L1–L2, 1–2 per room from L3+. [LOCKED 2026-10-07]
 - Checkpoints: 1 per room (more if >60 s), **2–3 tiles inside the room entrance**, never on the border. One before any spike strip or boss.
 - Enemy HP: **keep base HP**. Scale by the **number of threats** and "tank" variants. Enemy damage **stays 1**. [LOCKED]
-- Level knobs: **L2 [LIVE 2026-10-05]** Saw speed 200, FallDelay 0.35, Crab walk 150 (L1: 150 / 0.5 / 120). **L3+ [PROPOSAL]:** Saw 250, FallDelay 0.25; Lizard ShootInterval 3 → 2.5 → 2, SightRange 600 → 800. Mini-boss (scale 1.3–1.4, HP 8–10, interval 1–2) only at a level end.
-- Log every playtest per room in `Docs/calibration_ledger.csv`: **clear time, damage taken, deaths, score collected / max**; then run `Docs/check_calibration.ps1`.
+- Level knobs: **L2 [LIVE 2026-10-05]** Saw speed 200, FallDelay 0.35, Crab walk 150 (L1: 150 / 0.5 / 120). **L3+ [PLAN, caps LOCKED 2026-10-07]:** Saw 250 (L3) → 300 (L7) → 350 max (L11); FallDelay 0.25 (L3), min 0.2; shooter sight/interval/reaction →see "Shooter aggression curve" below; Crab walk ≤ 200. Mini-boss (scale 1.3–1.4) only at a level end; HP by the prize counter-stat rule (§1.7): L1–2 8, L3–4 12, then ×k for each DPS prize the level assumes (M5 ×k, M7 ×4/3, M9–M12 ×k); interval per the shooter aggression curve.
+- **Shooter aggression curve** [LOCKED 2026-10-10, user-approved; L3+ only, L1/L2 unchanged]: per placed instance —
+  Sight L3 800 · L4 900 · L5 1000 · L6 1050 · L7 1100 · L8 1150 · L9–10 1200 · L11 1250 · L12 1280 (cap = half room);
+  ShootInterval 2.5 · 2.25 · 2.0 · 1.9 · 1.85 · 1.8 · 1.75 · 1.6 · 1.5 · 1.5 (min 1.5);
+  ReactionDelay 0.3 (L3–5) · 0.25 (L6–8) · 0.2 (L9+); AggroDuration 5 (L3–5) · 6 (L6–9) · 8 (L10+).
+  Mini-boss: interval = level − 0.5 (min 1.0), sight 2560. ≤1 shooter per sight line in L3–L4, ≤2 from L5.
+  Replaces the older Lizard ShootInterval/SightRange plan.
+- **Aggro when hit** [LOCKED 2026-10-10, L3+]: a hit enemy stays aggroed for AggroDuration (refreshed by each hit AND every tick it has line of sight to the player, so it calms down AggroDuration after losing sight; user-approved 2026-10-10) —
+  shooters ignore range/height limits (line of sight still required) and return fire after HitDuration + ReactionDelay;
+  chasers start chasing; walkers face the player.
+- Log every playtest per room in `Docs/calibration_ledger.csv`: **clear time, damage taken, deaths, score collected / max, threats**; then run `Docs/check_calibration.ps1`.
+- **Threat** = each placed enemy + saw + spike trap + falling platform + crumble section; **density** = threats / clear time × 10 s, checked against §1.8 (±15 %, cap 6). (user-approved 2026-10-07; L1 density re-measured on this definition = 2.5)
+- **Spike strip = 1 threat** [LOCKED 2026-10-08, user-approved]: a continuous strip of adjacent spike actors counts as ONE threat (like 1 crumble section), not one per spike tile; this stops long strips from inflating the threat count. L2 R0/R1 recounted 2026-10-08: no change (each spike actor is a separate strip).
 
 ### 1.4 Movement / geometry rules [LOCKED]
 | Measure | Value |
@@ -108,12 +127,12 @@ Compare rooms **relative to each other**. Absolute times depend on the tester's 
   | Obsidian | 50 | secret (Melon); grand secret / mini-boss reward = Obsidian instance ScoreValue **100**, scale 1.5, MAX 1 per level (Pineapple) |
 - Crystal placement: Clear/Emerald rest ON floors (floor top + 32), preferably near ledge-edge crystal tiles; Amber sits where the risk is (over spikes, a saw's path, a bat's zone); Ice only as short 2–3 arc trails where a jump is unclear; climb tops get one marker crystal. Prefer fewer, higher-value crystals with an even spread per corridor.
 - **Room fruit formula:** apples = main-route beats; +1 Orange per optional move; +1 Cherries per optional threat; +1 Melon per secret; +1 Kiwi per side branch; Bananas only as trails.
-- **Kill values:** Crab 10, Bat 20, Lizard 20, Eye 30, Black Bat 30, Crystal Bat 30, Warden 100 (instance override), Angry Pig 10 (not calibrated).
-- **New enemy formula:** 10 × **fewest charged hits to kill** (Full 3 / Partial 2 dmg) + bonus: ranged **+10**, chaser **+20**, plain flier +0. Checks: Crab 1 hit = 10 · Bat full+partial = 20 · Lizard 1 + ranged = 20 · Eye / Black Bat / Crystal Bat 1 + chaser = 30 · Pig 1 = 10. Mini-bosses use an instance override (Warden 100).
-- No-damage room bonus: 50 in L1, +25 per level [PLAN].
+- **Kill values:** Crab 10, Bat 20, Lizard 20, Crystal Lizard 20, Trunk 20, Eye 30, Black Bat 30, Crystal Bat 30, Warden 100 (instance override), Angry Pig 10 (not calibrated).
+- **New enemy formula:** 10 × **fewest charged hits to kill** (Full 3 / Partial 2 dmg) + bonus: ranged **+10**, chaser **+20**, plain flier +0. Checks: Crab 1 hit = 10 · Bat full+partial = 20 · Lizard / Crystal Lizard / Trunk 1 + ranged = 20 · Eye / Black Bat / Crystal Bat 1 + chaser = 30 · Pig 1 = 10. Mini-bosses use an instance override (Warden 100).
+- No-damage room bonus: 50 in L1, +25 per level, cap 150 [PLAN].
 - **Score survives death; a kill scores once** (`bScoreAwarded`).
-- **Level budget:** L1 ≈ 1030 (actual 970, −6 %); ×1.3 per level → **L2 1340, L3 1740, L4 2260, L5 2940**.
-- Average player ≈ **70 %** of max. Cumulative average: L1 ~720, L2 ~1660, L3 ~2880, L4 ~4460, L5 ~6520.
+- **Level budget:** L1 ≈ 1030 (actual 970, −6 %); ×1.3 per level to L5 → **L2 1340, L3 1740, L4 2260, L5 2940**; then **plateau +50/level → L6 3000 … L12 3300** (locked point values + fixed room size cap a room at ~1000–1100; verify in L3/L4). [LOCKED 2026-10-07]
+- Average player ≈ **70 %** of max. Cumulative average: L1 ~720, L2 ~1660, L3 ~2880, L4 ~4460, L5 ~6520, L6 ~8620, L7 ~10755, L8 ~12925, L9 ~15130, L10 ~17370, L11 ~19645, L12 ~21955.
 - **Tolerance:** drift > **±15 %** → change FRUIT, never the milestones.
 
 ### 1.7 Milestones / prizes (fixed anchors) [LOCKED]
@@ -122,14 +141,41 @@ Compare rooms **relative to each other**. Absolute times depend on the tester's 
 | M1 | 300 | +1 max HP + full heal | LIVE (`GM_Action.Prize1Score`) |
 | M2 | 800 | Spread Shot (regular shots only) | LIVE |
 | M3 | 1500 | Full charge 1.8 → 1.2 s | LIVE |
-| M4 | 2500 | +1 max HP | PLAN (before Level 3; needs HUD heart slots, see §2.6) |
+| M4 | 2500 | +1 max HP (→ 12) | PLAN (before Level 3; needs HUD heart slots, see §2.6) |
 | M5 | 3800 | new weapon (e.g. Pierce Shot) | PLAN |
-| M6 | 5500 | +1 max HP or charge 1.2 → 0.9 s | PLAN |
-- Gaps widen with the level budgets: 300 → +500 → +700 → +1000 → +1300 → +1700.
-- Design each level for the prizes the **AVERAGE** player owns at its START (L1 none; L2 11 HP; L3 11 HP + Spread + fast charge; L4 12 HP …). **Never require a prize.**
-- Prize power budget: single-target DPS gain ≤ **×1.5**, close-range ≤ **×2**. A ×k player stat → ×k counter-stat in the level that ASSUMES the prize. +1 HP → +1 dmg/room next level; Spread → more flying/angled threats from L2; fast charge → boss HP ×1.5 from L3 (Warden 8 → 12).
+| M6 | 5500 | +1 max HP (→ 13) | PLAN |
+| M7 | 7500 | Full charge 1.2 → 0.9 s | PLAN |
+| M8 | 9700 | +1 max HP (→ 14 = HP CAP) | PLAN |
+| M9 | 12000 | new ability (non-movement, TBD) | PLAN |
+| M10 | 14300 | new ability (non-movement, TBD) | PLAN |
+| M11 | 16600 | new ability (non-movement, TBD) | PLAN |
+| M12 | 18900 | new ability (non-movement, TBD) | PLAN |
+- Gaps: 300 → +500 → +700 → +1000 → +1300 → +1700 → +2000 → +2200 → +2300 (flat after the score plateau). ~1 milestone per level. **Max HP cap 14.** No movement prizes (every layout must work without them). [LOCKED 2026-10-07]
+- Design each level for the prizes the **AVERAGE** player owns at its START (L1 none; L2 11 HP; L3 11 HP + Spread + fast charge; L4 12 HP …; start HP per level in §1.8). **Never require a prize.**
+- Prize power budget: single-target DPS gain ≤ **×1.5**, close-range ≤ **×2**. A ×k player stat → ×k counter-stat in the level that ASSUMES the prize. +1 HP → +1 level damage budget next level (up to the §1.3 cap); Spread → more flying/angled threats from L2; fast charge → boss HP ×1.5 from L3 (Warden 8 → 12).
 - Spread [LIVE]: Regular only, side shots ×0.5 dmg, no Owner (no refund), cooldown 0.5 s, angle 15°, grounded 0/+15/+30°, airborne −15/0/+15°.
 - After a respawn the pawn is NEW → `GM_Action.ReapplyPrizes` must keep working. Score + NextMilestone carry across maps via `GI_Platformer`.
+
+### 1.8 12-level game plan [LOCKED 2026-10-07]
+Clean tester times; scores = MAX budgets; "Prize reached" = the milestone the average player reaches during that level.
+| L | Time R0/R1/R2 | Start HP | Dmg R0/R1/R2 (level) | Threats/10 s | Max score | Avg cum | Prize reached |
+|---|---|---|---|---|---|---|---|
+| 1 | 25/32/40 | 10 | 1/2/3 (6) | 2.5 | 970 | 720 | M1 |
+| 2 | 35/37/55 | 11 | 2/3/4 (9) | 3.3 | 1340 | 1660 | M2, M3 |
+| 3 | 40/50/60 | 11 | 2/3/4 (9) | 3.8 | 1740 | 2880 | M4 |
+| 4 | 40/50/60 | 12 | 3/3/4 (10) | 4.2 | 2260 | 4460 | M5 |
+| 5 | 40/50/60 | 12 | 3/3/4 (10) | 4.6 | 2940 | 6520 | M6 |
+| 6 | 40/50/60 | 13 | 3/4/4 (11) | 4.9 | 3000 | 8620 | M7 |
+| 7 | 40/50/60 | 13 | 3/4/4 (11) | 5.2 | 3050 | 10755 | M8 |
+| 8 | 40/50/60 | 14 | 4/4/4 (12) | 5.4 | 3100 | 12925 | M9 |
+| 9 | 40/50/60 | 14 | 4/4/4 (12) | 5.6 | 3150 | 15130 | M10 |
+| 10 | 40/50/60 | 14 | 4/4/4 (12) | 5.8 | 3200 | 17370 | M11 |
+| 11 | 40/50/60 | 14 | 4/4/4 (12) | 5.9 | 3250 | 19645 | M12 |
+| 12 | 40/50/60 | 14 | 4/4/4 (12) | 6.0 | 3300 | 21955 | final boss |
+- L2 R1 time = the approved exception (nominal 43.6 s). Times from L3 are targets at the 60 s cap.
+- Expected real play time: L1 ~2.5 min, L2 ~3.4, L3–5 ~5 each, L6+ ~5–6 each → ≈ 55–60 min total.
+- Tiles: every level reuses part of `TS_L1_Terrain` + its own level-specific tiles (no shared "worlds").
+- Content need (estimate): ~18 mechanics, ~1 new enemy per level, a mini-boss per level, a final boss.
 
 ---
 
@@ -157,6 +203,7 @@ Compare rooms **relative to each other**. Absolute times depend on the tester's 
 | Room centre | X = **1248 + 2560·room**, Z = **−704** |
 | L1 tilemap | `/Game/PaperAssets/Environment/Level_1/TM_Stage_1` |
 | L2 tilemap | `/Game/PaperAssets/Environment/Level_2/TM_Level2` |
+| Tilesets | each level = part of `TS_L1_Terrain` + its own level tiles |
 | Backdrop | sRGB **#8F7C99**, cube `S{L}_Backdrop` at Y −300 (linear 0.2833/0.2087/0.3327) |
 
 ### 2.3 Camera and resolution [LOCKED]
@@ -173,9 +220,12 @@ Compare rooms **relative to each other**. Absolute times depend on the tester's 
 | Y | Content |
 |---|---|
 | +3 | Foreground FX (e.g. the player's ZzzBubble; MASKED material so translucent parallax can't cover it); added 2026-10-03 |
-| +1 | Pickups, trap sprites, WaterDrip |
+| +1.1 | Saw sprites (`BP_Trap_Saw` Sprite/SpriteOff rel Y 1.1, in front of pickups to stop z-fighting); user-approved 2026-10-08 |
+| +1 | Pickups, other trap sprites, WaterDrip |
 | +0.05 | Player sprite |
 | +0.04 … +2.0 | Enemies: a random value per instance at BeginPlay (anti z-fighting). The range deliberately spans +0.05 and +1, so an enemy may draw in front of or behind the player/pickups; an exact Y tie is practically impossible |
+| +0.03 | Decoration flipbooks on tiles (e.g. `S2_R0_VFX_CrystalPulse_01`); in front of shimmer overlays |
+| +0.02 | Tile shimmer overlays (`BP_VFX_TileShimmer`) |
 | 0 … −8 | Tilemap layers |
 | −20 | Background particles |
 | −150 | Parallax Middle |
@@ -200,7 +250,7 @@ Gameplay actors at **world Y = 0**; movement plane-constrained (normal Y, `SnapT
 | Jumps | JumpMaxCount **2**, hold 0.172 |
 | Air | AirControl 1.0, FallingLateralFriction 50 |
 | Wall slide | speed −20, traces 40/55 (BoxTrace 1,1,24), flush snap |
-| Health | MaxHealth **10**; HUD has **11** heart slots (enough for M1). **[PLAN]** grow the HUD to 13 slots before M4 (12 HP) / M6 (13 HP) go live |
+| Health | MaxHealth **10**; HUD has **11** heart slots (enough for M1). **[PLAN]** grow the HUD to **14** slots (HP cap 14) before M4 (12 HP) goes live |
 | Shooting | ShootEnergy 3, PartialCharge 0.8 s, FullCharge **1.8 s** |
 | Respawn | 2.0 s, NEW pawn |
 
@@ -208,6 +258,7 @@ Gameplay actors at **world Y = 0**; movement plane-constrained (normal Y, `SnapT
 **Enemy templates have MaxHealth 10 — real HP is set PER PLACED INSTANCE.**
 | Enemy | Capsule | Move | HP | Score | Notes |
 |---|---|---|---|---|---|
+| Trunk (L3) | 54/40 | walk 120 | 3 | 20 | walking shooter (Crab duplicate, AIC_Base); per-instance sight/interval per §1.3 curve; Hit anim; aggro when hit; bullet → BP_VFX_TrunkBulletPieces |
 | Crab | 45/45 | walk 120 | 3 | 10 | AIC_Crab, ledge/wall turn |
 | Angry Pig | 45/45 | MaxWalk 260 run; calm ×0.46 ≈ 120 | 3 | 10 | idles 1 s at edges; Hit1 → run; killing hit → Hit2 → hop 1000 → falls off the map; DeathDelay 1.3, no poof; sprite scale X −1 |
 | Bat | 60/34 | bob, MovePlayRate 0.8 | 5 | 20 | |
@@ -215,9 +266,11 @@ Gameplay actors at **world Y = 0**; movement plane-constrained (normal Y, `SnapT
 | Black Bat | (as Crystal Bat) | Eye chase, fly 400 | 3 | 30 | child of Eye; death: Ceiling_Out last frame + fall; untested, not placed |
 | Crystal Bat (L2) | 60/43 | Eye chase, fly 400 | **3** | 30 | child of BlackBat → Eye; AggroRange sized per corridor; CDO Score set 20 → 30 on 2026-10-05 (placed instances were already 30) |
 | Lizard | 45/34 | shooter | 3 | 20 | interval 3, sight 600, reaction 0.3, LOS, turns to face |
-| Warden | Lizard ×1.3 | | 8 | 100 | interval 2.0, range 1100 |
-- Projectile damage: Regular 1 · Partial 2 · Full 3 · Lizard 1. No projectile lifespan ("aggro when hit" planned for L2).
+| Crystal Lizard (L2) | 45/34 | shooter | 3 | 20 | child of BP_Enemy_Lizard (recolour); own ABP + CrystalIdle/CrystalShoot, ShootFireball overridden (DefaultSlot); L2 R2 Lizard_01 + Warden use it; projectile art still orange |
+| Warden | Lizard ×1.3 | | 8 | 100 | interval 2.0, range 1100; L2 Warden = Crystal Lizard instance |
+- Projectile damage: Regular 1 · Partial 2 · Full 3 · Lizard 1. No projectile lifespan; "aggro when hit" is L3+ only (§1.3), L1/L2 enemies have none.
 - Traps (BP_Trap_BASE → `OnPlayerTriggered`): Saw dmg 1, speed 150, dist 300; FallingPlatform FallDelay 0.5, FallSpeed 800, RespawnDelay 3, one-way; **Spikes** (`BP_Trap_Spikes`, L2+) dmg 1, 1 tile, box 26/16/14 at z −18, ApplyDamage + Self causer; FallDetector = instant death; WinDetector `Level Name` → next map.
+- **WinDetector level-end flag** [LIVE 2026-10-09]: `BP_WinDetector` has a `Flag` flipbook component (visible in the editor for placement, hidden at BeginPlay). Reveal = player's `CurrentRoomIndex` == the WinDetector's room AND camera slide done (`RoomTransitionAlpha >= 1`) → `RevealDelay` (0.5 s, per instance) → `FB_Level_Finished_Flag_Out` once (1.73 s) → `FB_Level_Finished_Flag_Idle` looping. Shown once per level (`bFlagShown`). Art in `/Game/PaperAssets/Props/LevelFinished`. Never set the flipbook/visibility on placed instances; move only the Flag component.
 - **Level 2 live tweaks** (2026-10-05): Saw speed **200**, FallDelay **0.35**, Crystal Crab walk 150.
 - BP_Enemy_BASE opt-in knobs: `DeathDelay` 0, `bSpawnDestroyVFX` true, `TurnCooldown` 0.15 (+`bPendingTurn`), `ScoreValue`, `bScoreAwarded`.
 
@@ -235,7 +288,7 @@ Gameplay actors at **world Y = 0**; movement plane-constrained (normal Y, `SnapT
 - `BP_<Category>_BASE` / `BP_<Category>_<Name>` / `AIC_<Name>`.
 - Labels `S{level}_R{room}_{Type}_{Name|NN}`; particles/drips numbered by X then top-down; `S#_R#_Parallax_Background|Middle`. Exceptions: `S#_Backdrop`, the tilemap actor, PlayerStart, `_Global`.
 - Outliner: `Level N/{Terrain(+FallDetectors), Gameplay, Enemies, Traps(+Spikes), Pickups, Parallax, VFX/{WaterDrips,BgParticles}}`; map-wide actors in `_Global`.
-- Content: `/Game/Blueprints/{AI,Characters,Components,Enums,Environment,Pickups,Projectiles,Props,Traps,VFX}`, `/Game/PaperAssets/{Characters,Environment/Level_N,Fruits,Fx,Traps,UI}`, `/Game/{Materials,Widgets,Audio,Input,Maps}`; project docs in `/Docs` (outside Content).
+- Content: `/Game/Blueprints/{AI,Characters,Components,Enums,Environment,Pickups,Projectiles,Props,Traps,VFX}`, `/Game/PaperAssets/{Characters,Environment/Level_N,Fruits,Fx,Props,Traps,UI}`, `/Game/{Materials,Widgets,Audio,Input,Maps}`; project docs in `/Docs` (outside Content).
 
 ---
 
@@ -246,7 +299,7 @@ Gameplay actors at **world Y = 0**; movement plane-constrained (normal Y, `SnapT
 3. **Health only in `BPC_Vitality`; damage only via ApplyDamage WITH a DamageCauser.**
 4. **`BPC_RoomMember`** on enemies/traps: frozen outside the room, reset home on exit. Position-based room camera.
 5. **The user paints tiles**; Claude places/tunes actors and bot-tests on request.
-6. **Calibration loop:** tiles + collision → beat plan → place → max score → user playtest → log in `Docs/calibration_ledger.csv` → run `Docs/check_calibration.ps1` → compare (+20–30 %) → adjust fruit/threats.
+6. **Calibration loop:** tiles + collision → beat plan → place → max score → user playtest → log in `Docs/calibration_ledger.csv` → run `Docs/check_calibration.ps1` → compare (+20–30 % within the level, §1.8 targets) → adjust fruit/threats.
 7. **One map per level**; GI carries score/prizes; WinDetector → next map; the user switches maps.
 8. **Visual hygiene:** a unique Y per plane; left-facing art → sprite scale X −1; avoid sub-texel slow motion; Clamp sheets.
 9. **Instance overrides are fragile:** CDO changes don't reach placed instances; moving a BP actor resets component edits (location first); use exposed vars instead of mesh material overrides.
@@ -262,7 +315,7 @@ Cause: the plugin runs tool calls mid-world-tick.
 
 **Must:** every run_python mutation inside a one-shot `register_slate_post_tick_callback` (work on tick ≥2, unregister, `unreal.log` + Grep `Saved/Logs/WhateverPlatformer.log`) · deferred compile only for NEW BPs without instances · save before risky steps · one logical change per call · graph tools are safe · **crash protocol:** read `Saved/Crashes` + `Saved/Logs`, record the cause, never repeat the failed method.
 
-**Quirks:** focus switch = deferred `close_all_editors_for_asset` (tick 1) + `open_editor_for_assets` (tick 3) · object-pin defaults read "" but work (check `asset_get_dependencies`) · generic var keys resolve to the last search (verify; ambiguous titles can pick the wrong node) · impossible via tools: parent-call nodes, timeline tracks, PaperZD state machines, object/enum vars, custom-event params, `GetComponentByClass` class pin · Python can't read `EdGraph.Nodes`/`Blueprint.Status` · Python collision changes need `body_instance` + profile · attaching to BP components isn't saved · `del` Python globals + `gc.collect()` before deleting assets · session-rendered materials can't be deleted until a restart · tilemap edit pipeline: make editable → set_tile → layers into the asset → set_tile_map → empty the instance + rename into `/Engine/Transient` → save · PIE bot via `EnhancedInputLocalPlayerSubsystem` injection, only when asked; label bot-caused errors · Claude can't write project files from the editor session (Write is denied): Claude gives full path + content and the user saves it.
+**Quirks:** focus switch = deferred `close_all_editors_for_asset` (tick 1) + `open_editor_for_assets` (tick 3) · object-pin defaults read "" but work (check `asset_get_dependencies`) · generic var keys resolve to the last search (verify; ambiguous titles can pick the wrong node) · impossible via tools: parent-call nodes, timeline tracks, PaperZD state machines, object/enum vars, custom-event params, `GetComponentByClass` class pin · Python can't read `EdGraph.Nodes`/`Blueprint.Status` · Python collision changes need `body_instance` + profile · attaching to BP components isn't saved · `del` Python globals + `gc.collect()` before deleting assets · session-rendered materials can't be deleted until a restart · tilemap edit pipeline: make editable → set_tile → layers into the asset → set_tile_map → empty the instance + rename into `/Engine/Transient` → save · PIE bot via `EnhancedInputLocalPlayerSubsystem` injection, only when asked; label bot-caused errors · Claude can't write project files from the editor session (Write is denied): Claude gives full path + content and the user saves it · deleting/replacing a placed enemy in the editor spawns a BP_VFX_EnemyDestroyed poof that stays in the map → after any enemy swap/delete, list_actors "EnemyDestroyed" and delete the leftovers · editing a BP component template via Python (SubobjectDataSubsystem) does NOT update already-placed instances (even after compile) → also set the instances, then verify world values · on placed BP actors, `set_editor_property` on a component reruns the construction script and swaps components mid-loop → use component functions (`set_relative_location`, `set_flipbook`, `set_visibility`) instead.
 
 ---
 
@@ -273,8 +326,8 @@ Cause: the plugin runs tool calls mid-world-tick.
 3. Depth bands (§2.4).
 4. Projectile channel default Block; OverlapAll(-Dynamic) ignore Projectile; capsules overlap Pawn.
 5. BASE inheritance, BPC_Vitality, ApplyDamage + causer, opt-in base changes, one map per level + GI in DefaultEngine.ini.
-6. R0 = difficulty 1.0; +20–30 % per room; 1 mechanic per room; enemy damage 1; never require prizes.
-7. Fruit/kill values; milestones 300/800/1500/2500/3800/5500 fixed; ±15 % fruit rule; ×1.3 per level; 70 % average; prize budget ×1.5 / ×2.
+6. R0 = difficulty 1.0; +20–30 % per room within a level, 60 s room cap, intensity growth between levels; mechanics rule (§1.3); enemy damage 1; never require prizes; 12-level plan (§1.8).
+7. Fruit/kill values; milestones M1–M12 (§1.7) fixed; ±15 % fruit rule; ×1.3 per level to L5, then plateau +50/level; 70 % average; HP cap 14; prize budget ×1.5 / ×2.
 8. Naming and folders (§2.10).
 9. Parallax standard, no foreground layer.
 10. The user designs tile layouts.
