@@ -11,9 +11,12 @@ $Core   = Join-Path (Split-Path $PSScriptRoot -Parent) 'core.md'
 
 # core.md 1.3 / 1.6 / 1.7 [LOCKED]
 $BudgetOverride = @{ 1 = 1030 }   # 1.6: L1 budget 1030 (the 1.8 table shows the actual 970)
-$TimeNominal    = @{ '2-1' = 43.6; '2-2' = 51.4 } # 1.3: L2 R1 + R2 time exceptions (user-approved 2026-10-07 / 2026-10-08)
+$TimeNominal    = @{ '2-1' = 43.6; '2-2' = 51.4; '3-2' = 52.3 } # 1.3: L2 R1 + R2, L3 R2 time exceptions (user-approved 2026-10-07 / 2026-10-08 / 2026-10-25)
 $ThreatGrowthExempt = @(1)          # 1.3: L1 calibrated before the threat definition -> threat growth = INFO
 $Tolerance  = 0.15   # level max vs budget, time/density vs plan
+$ScoreSplitFrom = 4                    # 1.6 room score split applies from this level
+$ScoreSplit     = @(1, 1.25, 1.5625)   # R0 : R1 : R2 (max excl. reward)
+$RewardPerLevel = 100                  # mini-boss reward excluded from the split
 $GrowMin    = 0.20   # room-to-room growth
 $GrowMax    = 0.30
 $AvgShare   = 0.70   # average player share of max
@@ -196,6 +199,38 @@ for ($lv = 1; $lv -le 12; $lv++) {
     $drift = ($sum - $b) / $b
     $msg = "L$lv max $sum vs budget $b ($(Pct $drift)); cumulative avg ~$([math]::Round($cum)) ($ms)"
     if ([math]::Abs($drift) -le $Tolerance) { Pass $msg } else { Fail "$msg -> change FRUIT, never milestones" }
+}
+
+# ---------------------------------------------------------------- 1.6 room score split (L4+)
+Write-Host "`n== Room score split (L$ScoreSplitFrom+, (budget - reward) x 1 : 1.25 : 1.5625, +-15 %) =="
+$splitSum = ($ScoreSplit | Measure-Object -Sum).Sum
+$splitRows = @($rows | Where-Object { $_.Level -ge $ScoreSplitFrom } | Sort-Object Level, Room)
+if ($splitRows.Count -eq 0) { Info "no L$ScoreSplitFrom+ rooms in the ledger yet" }
+foreach ($r in $splitRows) {
+    $t = [math]::Round(((Budget $r.Level) - $RewardPerLevel) * $ScoreSplit[$r.Room] / $splitSum)
+    $v = $r.Max - $r.Reward
+    $d = ($v - $t) / $t
+    $msg = "L$($r.Level) R$($r.Room) max excl. reward $v vs split target $t ($(Pct $d))"
+    if ([math]::Abs($d) -le $Tolerance) { Pass $msg } else { Warn $msg }
+}
+
+# ---------------------------------------------------------------- 1.3 calibration start score (actual cumulative)
+Write-Host "`n== Actual cumulative avg = calibration start score (ledger maxes x $AvgShare, budget for unfinished levels) =="
+$cumAct = 0
+for ($lv = 1; $lv -le 12; $lv++) {
+    if (-not $Plan.ContainsKey($lv)) { continue }
+    $lr = @($rows | Where-Object Level -eq $lv)
+    $done = $lr.Count -ge 3
+    $lvMax = if ($done) { ($lr | Measure-Object Max -Sum).Sum } else { Budget $lv }
+    $start = $cumAct
+    $cumAct += $lvMax * $AvgShare
+    $crossed = @()
+    for ($i = 0; $i -lt $Milestones.Count; $i++) { if ($Milestones[$i] -gt $start -and $Milestones[$i] -le $cumAct) { $crossed += ($i + 1) } }
+    $src = if ($done) { 'actual' } else { 'budget' }
+    $got = if ($crossed.Count) { 'M' + ($crossed -join ', M') } else { 'none' }
+    $want = if ($Plan[$lv].Prize.Count) { 'M' + ($Plan[$lv].Prize -join ', M') } else { 'none' }
+    $msg = "L$lv start score $([math]::Round($start)) -> end $([math]::Round($cumAct)) ($src max $lvMax); prizes $got"
+    if ($got -eq $want) { Pass $msg } else { Warn "$msg vs plan $want" }
 }
 
 # ---------------------------------------------------------------- core.md: kill values 1.6 vs enemy table 2.7
