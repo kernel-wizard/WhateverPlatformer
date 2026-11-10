@@ -3,6 +3,8 @@
 > A pixel-art 2D action platformer built in **Unreal Engine 5.3** with **Paper2D**. You jump, wall-slide and charge-shoot through 12 hand-built levels, and every room is tuned against a measured difficulty curve.
 Few levels of the game has been built because I was bored. There is a lot of things that needs to be improved and levels to build but I still decided to share it, because meaby someone might find it useful for whatever reason.
 
+>Read instruction to run the project on your machine. If there are any issues with running the project just use AI to solve it.
+
 ![Engine](https://img.shields.io/badge/Unreal%20Engine-5.3-0E1128?logo=unrealengine)
 ![2D](https://img.shields.io/badge/Paper2D-PaperZD-6E4C9E)
 ![Platform](https://img.shields.io/badge/platform-Windows-0078D6?logo=windows)
@@ -98,16 +100,450 @@ core.md              # Full design + calibration rulebook
 
 ## 🚀 Getting started
 
-1. Install **Unreal Engine 5.3**.
-2. Clone the repository:
-   ```bash
-   git clone <this-repo-url>
-   ```
-3. Open `WhateverPlatformer.uproject`. If asked, let the engine rebuild modules. The **PaperZD** plugin must be installed.
-4. Press **Play** in `MAP_Level1`, which is the default map.
+# Unreal Engine 5.3 Project Setup
 
-> 💡 `MAP_Debug` is a safe sandbox for testing enemies and traps.
+This project uses **Unreal Engine 5.3** and contains a C++ plugin that must be compiled locally after cloning the repository.
 
+The repository intentionally does **not** contain generated Unreal Engine build files such as `Binaries/` and `Intermediate/`.
+
+## Requirements
+
+Install the following before opening the project:
+
+- Unreal Engine **5.3**
+- Visual Studio **2022**
+- Visual Studio workload:
+  - **Game development with C++**
+- MSVC v143 toolset:
+  - **14.34.31933**
+- Windows 10 or Windows 11 SDK
+
+The project contains the following C++ plugin:
+
+```text
+Plugins/RootMovement_5.3/
+```
+
+Its source code is included in the repository and the plugin is compiled locally.
+
+---
+
+## 1. Install Unreal Engine 5.3
+
+Install Unreal Engine 5.3 using the Epic Games Launcher.
+
+The project file should use:
+
+```json
+"EngineAssociation": "5.3"
+```
+
+If Windows opens the project using another Unreal Engine version:
+
+1. Right-click the `.uproject` file.
+2. Select **Switch Unreal Engine Version**.
+3. Select **5.3**.
+
+---
+
+## 2. Install Visual Studio 2022
+
+Open:
+
+```text
+Visual Studio Installer
+```
+
+Select:
+
+```text
+Visual Studio 2022
+→ Modify
+```
+
+Install the workload:
+
+```text
+Game development with C++
+```
+
+Make sure a Windows SDK is also installed.
+
+---
+
+## 3. Install the compatible MSVC toolset
+
+Unreal Engine 5.3 may fail to compile with newer MSVC versions such as `14.44`.
+
+Install:
+
+```text
+MSVC v143 - VS 2022 C++ x64/x86 build tools
+```
+
+Required version:
+
+```text
+14.34.31933
+```
+
+You can verify installed MSVC versions with PowerShell:
+
+```powershell
+Get-ChildItem "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC"
+```
+
+Expected output should contain:
+
+```text
+14.34.31933
+```
+
+It is fine to have newer versions installed as well.
+
+---
+
+## 4. Configure Unreal Engine to use MSVC 14.34
+
+Create this directory if it does not exist:
+
+```powershell
+New-Item -ItemType Directory -Force "$env:APPDATA\Unreal Engine\UnrealBuildTool"
+```
+
+Create the following file:
+
+```text
+%APPDATA%\Unreal Engine\UnrealBuildTool\BuildConfiguration.xml
+```
+
+with this content:
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<Configuration xmlns="https://www.unrealengine.com/BuildConfiguration">
+  <WindowsPlatform>
+    <Compiler>VisualStudio2022</Compiler>
+    <CompilerVersion>14.34.31933</CompilerVersion>
+  </WindowsPlatform>
+</Configuration>
+```
+
+Verify the configuration with:
+
+```powershell
+Get-Content "$env:APPDATA\Unreal Engine\UnrealBuildTool\BuildConfiguration.xml"
+```
+
+---
+
+## 5. Clone the repository
+
+Clone the project normally:
+
+```bash
+git clone <repository-url>
+```
+
+Then enter the project directory:
+
+```bash
+cd WhateverPlatformer
+```
+
+The repository should contain the plugin source:
+
+```text
+Plugins/
+└── RootMovement_5.3/
+    ├── RootMovement.uplugin
+    ├── Source/
+    │   └── RootMovement/
+    │       ├── RootMovement.Build.cs
+    │       ├── Public/
+    │       └── Private/
+    ├── Content/
+    └── Resources/
+```
+
+Generated plugin folders such as these should not be required from Git:
+
+```text
+Plugins/RootMovement_5.3/Binaries/
+Plugins/RootMovement_5.3/Intermediate/
+```
+
+---
+
+## 6. Clean generated Unreal files
+
+If the project was copied, renamed, moved between machines, or previously opened with another configuration, remove old generated files before building.
+
+Close Unreal Engine and Visual Studio first.
+
+From the project root run:
+
+```powershell
+Remove-Item -Recurse -Force .\Intermediate -ErrorAction SilentlyContinue
+Remove-Item -Recurse -Force .\Binaries -ErrorAction SilentlyContinue
+```
+
+These folders are generated automatically and can safely be recreated.
+
+Do **not** delete:
+
+```text
+Content/
+Config/
+Plugins/RootMovement_5.3/Source/
+*.uproject
+```
+
+---
+
+## 7. Build the project manually
+
+If Unreal displays:
+
+```text
+The following modules are missing or built with a different engine version:
+
+RootMovement
+
+Would you like to rebuild them now?
+```
+
+you can first try selecting:
+
+```text
+Yes
+```
+
+If Unreal reports:
+
+```text
+could not be compiled. Try rebuilding from source manually.
+```
+
+build the project manually from PowerShell.
+
+From the project directory run:
+
+```powershell
+& "C:\Program Files\Epic Games\UE_5.3\Engine\Build\BatchFiles\Build.bat" `
+  Development Win64 `
+  -Project="$PWD\WhateverPlatformer.uproject" `
+  -TargetType=Editor `
+  -Progress `
+  -NoEngineChanges `
+  -NoHotReloadFromIDE
+```
+
+Replace:
+
+```text
+WhateverPlatformer.uproject
+```
+
+with the actual project filename if necessary.
+
+A successful build should generate the plugin DLL under:
+
+```text
+Plugins/RootMovement_5.3/Binaries/Win64/
+```
+
+For example:
+
+```text
+UnrealEditor-RootMovement.dll
+```
+
+After the build succeeds, open the `.uproject` normally.
+
+---
+
+## 8. Duplicate target error
+
+If the manual build reports an error similar to:
+
+```text
+Found multiple targets with TargetType=Editor
+```
+
+for example:
+
+```text
+MegaActionPlatformerEditor
+WhateverPlatformerEditor
+```
+
+the project most likely contains stale generated target files from before the project was renamed.
+
+Check them with:
+
+```powershell
+Get-ChildItem -Recurse -Filter *.Target.cs
+```
+
+If old targets are inside:
+
+```text
+Intermediate/Source/
+```
+
+do not edit them manually.
+
+Delete the generated project folders:
+
+```powershell
+Remove-Item -Recurse -Force .\Intermediate
+Remove-Item -Recurse -Force .\Binaries -ErrorAction SilentlyContinue
+```
+
+Then run the manual build again.
+
+---
+
+## 9. Build logs
+
+If compilation still fails, check the UnrealBuildTool log:
+
+```powershell
+Get-Content "$env:LOCALAPPDATA\UnrealBuildTool\Log.txt" -Tail 120
+```
+
+Useful errors usually appear near the end of this file.
+
+Also check:
+
+```text
+Saved/Logs/
+```
+
+for project-specific Unreal Engine logs.
+
+---
+
+## Git configuration
+
+Generated Unreal Engine files should not be committed.
+
+Recommended `.gitignore` rules:
+
+```gitignore
+# Visual Studio
+.vs/
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+*.ipa
+
+# Generated project files
+*.xcodeproj
+*.xcworkspace
+*.sln
+*.suo
+*.opensdf
+*.sdf
+*.VC.db
+*.VC.opendb
+.vsconfig
+
+# Unreal generated project folders
+Binaries/
+Intermediate/
+Saved/
+DerivedDataCache/
+
+# Unreal generated plugin folders
+Plugins/**/Binaries/
+Plugins/**/Intermediate/
+
+# Builds
+Build/*
+
+# Keep PakBlacklist files
+!Build/*/
+Build/*/**
+!Build/*/PakBlacklist*.txt
+
+# Keep icon files
+!Build/**/*.ico
+
+# Built map data
+*_BuiltData.uasset
+
+# Precompiled source art
+SourceArt/**/*.png
+SourceArt/**/*.tga
+```
+
+The plugin source itself must remain committed:
+
+```text
+Plugins/RootMovement_5.3/RootMovement.uplugin
+Plugins/RootMovement_5.3/Source/
+Plugins/RootMovement_5.3/Content/
+Plugins/RootMovement_5.3/Resources/
+```
+
+Do not solve compilation problems by committing generated plugin DLLs or `Intermediate` files.
+
+---
+
+# Quick setup
+
+For a new machine:
+
+```text
+1. Install Unreal Engine 5.3
+2. Install Visual Studio 2022
+3. Install "Game development with C++"
+4. Install MSVC v143 14.34.31933
+5. Configure BuildConfiguration.xml to use 14.34.31933
+6. Clone the repository
+7. Delete Binaries/ and Intermediate/ if they exist
+8. Build the project
+9. Open the .uproject
+```
+
+Manual build command:
+
+```powershell
+& "C:\Program Files\Epic Games\UE_5.3\Engine\Build\BatchFiles\Build.bat" `
+  Development Win64 `
+  -Project="$PWD\WhateverPlatformer.uproject" `
+  -TargetType=Editor `
+  -Progress `
+  -NoEngineChanges `
+  -NoHotReloadFromIDE
+```
+
+If the build succeeds, Unreal Engine should launch normally and the `RootMovement` plugin will be compiled for the local machine.
 ---
 
 ## 📖 Want the deep dive?
