@@ -3,7 +3,7 @@
 > A pixel-art 2D action platformer built in **Unreal Engine 5.3** with **Paper2D**. You jump, wall-slide and charge-shoot through 12 hand-built levels, and every room is tuned against a measured difficulty curve.
 Few levels of the game has been built because I was bored. There is a lot of things that needs to be improved and levels to build but I still decided to share it, because meaby someone might find it useful for whatever reason.
 
->Read instruction to run the project on your machine. If there are any issues with running the project just use AI to solve it.
+>Read instruction to run the project on your machine. If there are any issues with running the project just use AI to solve it. You might also just use the Release Build to run the game to just check it.
 
 ![Engine](https://img.shields.io/badge/Unreal%20Engine-5.3-0E1128?logo=unrealengine)
 ![2D](https://img.shields.io/badge/Paper2D-PaperZD-6E4C9E)
