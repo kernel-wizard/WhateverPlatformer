@@ -24,7 +24,7 @@
 | Plugins | PaperZD, ClaudeAssistant (MCP editor tools), RootMovement, ModelingToolsEditorMode |
 | Game Mode | `/Game/Blueprints/GM_Action` (GlobalDefaultGameMode) |
 | Game Instance | `/Game/Blueprints/GI_Platformer` (**must** stay in `DefaultEngine.ini` `[/Script/EngineSettings.GameMapsSettings] GameInstanceClass=` or the score resets in Shipping builds) |
-| Maps | `/Game/Maps/MAP_Level1` (GameDefaultMap + EditorStartupMap), `/Game/Maps/MAP_Level2`, `/Game/Maps/MAP_Debug` (safe sandbox) |
+| Maps | `/Game/Maps/MAP_Level1` (GameDefaultMap + EditorStartupMap), `/Game/Maps/MAP_Level2`, `/Game/Maps/MAP_Level3`, `/Game/Maps/MAP_Level4`, `/Game/Maps/MAP_Debug` (safe sandbox) |
 | Old names | "MAP_2DStage" in older notes = **MAP_Level1**. "TM_Stage_2" in older notes = the tilemap now named **TM_Stage_1** (`/Game/PaperAssets/Environment/Level_1/TM_Stage_1`, 120x23), used by the actor `TM_Stage_1` in MAP_Level1 |
 | Calibration ledger | `Docs/calibration_ledger.csv` (one row per room) + `Docs/check_calibration.ps1` (cross-checks the ledger against this file; exit code = FAIL count) |
 | Game length | **12 levels ≈ 1 h** first play (§1.8) |
@@ -64,6 +64,11 @@ Compare rooms **relative to each other**. Absolute times depend on the tester's 
 | L3 R1 | 48 s | 1–2 | 0 | 470 | hammer ambush (caged exit warp + run back, ambush 0 pts); 19 threats, density 4.0 |
 | L3 R2 | 52 s | 3 | 0 | 680 | Plant turret + combo (hammer floor-drop + caged exit + ambush) + Trunk Warden mini-boss (HP 12, HitStunCooldown 1.5); 24 threats, density 4.6; first room built from microsections (§1.5); TIME EXCEPTION, see §1.3 |
 
+**Level 4 ladder** (same tester, calibration runs with the average start-of-level loadout: 12 HP + Spread + fast charge, monitor start score 2632):
+| Room | Time | Damage | Deaths | Max score | New mechanic |
+|---|---|---|---|---|---|
+| L4 R0 | 45 s | 0–2 | 0 | 580 | Marsh Vent (timed gas launch, no damage) + Slime + Snail; 17 threats, density 3.8; no-prize runs 43.8 s, 2.0 dmg, 0 deaths |
+
 ### 1.3 Scaling formulas
 - **Game length** (user-approved 2026-10-07): **12 levels ≈ 1 h** first play (real time ≈ tester clean time × 1.5–2.2). Per-level targets in §1.8. [LOCKED]
 - **Each room ≈ +20–30 % over the previous room WITHIN a level** (time, threat count, score). Each level's R0 ≈ ×1.1 the previous level's R0 in TIME and THREAT COUNT (sawtooth); R0 SCORE follows the level budget instead (§1.6 room score split). **Room time cap 60 s.** [LOCKED 2026-10-07; score clarification 2026-10-25]
@@ -74,6 +79,7 @@ Compare rooms **relative to each other**. Absolute times depend on the tester's 
 - Mini-boss / grand-secret rewards (Warden 100, Obsidian 100) are EXCLUDED from the room-growth comparison; they still count toward the level budget. (Option A, 2026-10-05)
 - **New mechanics:** exactly 1 per room in L1–L3; from L4, 1 new per level (in R0), and R1/R2 introduce a new COMBINATION of known mechanics. At most 1 new idea per section. ~1 new enemy per level; a mini-boss at each level end, final boss in L12. [LOCKED 2026-10-07]
 - L3: R0 Trunk, R1 hammer ambush (caged exit warp + run back), R2 Plant (+ combo + mini-boss) — user-approved 2026-10-17.
+- L4: R0 Marsh Vent; Slime + Snail both new in R0; mini-boss = Chameleon Warden in R2 (`BP_Enemy_Chameleon`, tongue attack, not PIE-tested yet) = 3 new enemies in L4, Bluebird dropped (user-approved 2026-11-02 / 2026-11-04).
 - Time targets: L1 R0 30 s → R1 35–45 s → R2 45–60 s. From L3: ~40 / 50 / 60 s, a level ≈ 2.5 min clean (~4.5–5.5 min real).
 - Damage budget: room ≤ **4**. L1 1/2/3 (= 6), L2 2/3/4 (= 9); from L3 the level budget = **min(start HP − 2, 12)**; per-level split in §1.8. Deaths 0–1 per room in L1–L2, 1–2 per room from L3+. [LOCKED 2026-10-07]
 - Checkpoints: 1 per room (more if >60 s), **2–3 tiles inside the room entrance**, never on the border. One before any spike strip or boss.
@@ -90,7 +96,7 @@ Compare rooms **relative to each other**. Absolute times depend on the tester's 
   chasers start chasing; walkers face the player; fixed-direction shooters (Plant) only return fire when the player is in front of them (user-approved 2026-10-11).
 - Log every playtest per room in `Docs/calibration_ledger.csv`: **clear time, damage taken, deaths, score collected / max, threats**; then run `Docs/check_calibration.ps1`.
 - **I-frame fix** [LIVE 2026-10-25, user-verified]: during i-frames (`bIsInvincible`) ALL damage is ignored (enemy contact, projectiles, traps); only BP_FallDetector still kills. Ledger rows logged before 2026-10-25 may show slightly MORE damage (enemy hit + trap/bullet within 1.5 s used to cost 2 HP). Existing rows stay as they are; re-time a room only if the user asks.
-- **Threat** = each placed enemy + saw + spike trap + falling platform + crumble section; **density** = threats / clear time × 10 s, checked against §1.8 (±15 %, cap 6). (user-approved 2026-10-07; L1 density re-measured on this definition = 2.5)
+- **Threat** = each placed enemy + saw + spike trap + falling platform + crumble section + marsh vent (user-approved 2026-11-03); **density** = threats / clear time × 10 s, checked against §1.8 (±15 %, cap 6). (user-approved 2026-10-07; L1 density re-measured on this definition = 2.5)
 - **Spike strip = 1 threat** [LOCKED 2026-10-08, user-approved]: a continuous strip of adjacent spike actors counts as ONE threat (like 1 crumble section), not one per spike tile; this stops long strips from inflating the threat count. L2 R0/R1 recounted 2026-10-08: no change (each spike actor is a separate strip).
 - **Two runs per room** [LOCKED 2026-10-14, user-approved]: (1) the **calibration run** (logged in the ledger) uses the average start-of-level loadout: the calibration monitor sets the start score to the ACTUAL average cumulative score after the previous level (ledger maxes × 0.7, §1.6; printed by `check_calibration.ps1`) via `GM_Action.AddScore`, so prizes come from the normal milestones; (2) one **no-prize run** (start score 0) proves "never require a prize"; not logged in the ledger.
 
@@ -114,7 +120,7 @@ Compare rooms **relative to each other**. Absolute times depend on the tester's 
 - Keep the Eye > 500 u from other tiers' paths; size its `AggroRange` box per instance.
 - Enemies outside the player's room are frozen (`BPC_RoomMember`) and reset home on room change. Kills never respawn.
 - **Exception: hammer ambush** (user-approved 2026-10-17): placed enemies tagged Ambush_1 stay dormant (hidden, no collision/tick/damage) until the hammer is picked up, then appear via BP_Prop_AmbushTrigger (HammerTag / AmbushTag / AppearDelay 0.3). Ambush enemies: known types only, ScoreValue 0, count as threats.
-- Shots to kill (Regular 1 / Partial 2 / Full 3): 3-HP enemies (Crab, Lizard, Pig, placed Eye, Black Bat, Crystal Bat, Trunk, Mushroom, Plant) = 3 regular / 2 partial / 1 full; Bat 5 HP = 5 regular or full + partial; Warden 8 HP.
+- Shots to kill (Regular 1 / Partial 2 / Full 3): 3-HP enemies (Crab, Lizard, Pig, placed Eye, Black Bat, Crystal Bat, Trunk, Mushroom, Plant, Slime, Snail) = 3 regular / 2 partial / 1 full; Bat 5 HP = 5 regular or full + partial; Warden 8 HP (L1–2), 12 HP (L3–4).
 - **Chaser HP rule** (user-approved 2026-10-05): enemies that CHASE the player (Eye-type: Eye, Black Bat, Crystal Bat) use the Eye base **3 HP**, whatever their art. A 5-HP chaser counts as a "tank" variant and is only for later rooms, never as a room's first chaser.
 - **Microsections** [LOCKED 2026-10-25, user-approved; first built in L3 R2]: a room is made of short sections, each with ONE clear focus:
   - **A – Movement Mastery**: a traversal test (climb column, jump chain, falling platforms, moving saws); few or no enemies — the route itself is the challenge.
@@ -125,7 +131,7 @@ Compare rooms **relative to each other**. Absolute times depend on the tester's 
 
 
 ### 1.6 Scoring formulas [LOCKED, LIVE in CDOs]
-**Fruit (Level 1 only; Level 2+ uses crystals, see below):**
+**Fruit (Level 1 only; Level 2 uses crystals, Level 3+ uses level pickups, see below):**
 | Fruit | Pts | Rule of use |
 |---|---|---|
 | Bananas | 5 | trails only: 3–5 in a line mark a jump arc or the way |
@@ -136,7 +142,7 @@ Compare rooms **relative to each other**. Absolute times depend on the tester's 
 | Strawberry | 40 | skill + risk; not used in L1 (L2+ equivalent = Amber) |
 | Melon | 50 | 1 per secret area |
 | Pineapple | 100 | grand secret / mini-boss reward; not used in L1 (L2+ equivalent = Obsidian 100) |
-- **Level 2+ pickups = CRYSTALS** (user-approved 2026-10-05; `BP_Pickup_Crystal_*`, art `/Game/PaperAssets/Crystals`). The 8 fruit tiers fold into 5:
+- **Level 2 pickups = CRYSTALS** (user-approved 2026-10-05; `BP_Pickup_Crystal_*`, art `/Game/PaperAssets/Crystals`). The 8 fruit tiers fold into 5:
   | Crystal | Pts | Role |
   |---|---|---|
   | Ice | 5 | trails (Bananas) |
@@ -145,9 +151,16 @@ Compare rooms **relative to each other**. Absolute times depend on the tester's 
   | Amber | 30 | risk inside a danger zone (Cherries + Strawberry) |
   | Obsidian | 50 | secret (Melon); grand secret / mini-boss reward = Obsidian instance ScoreValue **100**, scale 1.5, MAX 1 per level (Pineapple) |
 - Crystal placement: Clear/Emerald rest ON floors (floor top + 32), preferably near ledge-edge crystal tiles; Amber sits where the risk is (over spikes, a saw's path, a bat's zone); Ice only as short 2–3 arc trails where a jump is unclear; climb tops get one marker crystal. Prefer fewer, higher-value crystals with an even spread per corridor.
+- **Level 3+ pickups = level-themed, same point tiers, no 5-pt trail tier** (user-approved 2026-10-11):
+  | Tier | L3 Grove (`BP_Pickup_Grove_*`) | L4 Marsh (`BP_Pickup_Marsh_*`) |
+  |---|---|---|
+  | 10, main-route beat | Acorn | LotusBud |
+  | 20, optional move / side branch | Clover | SwampPearl |
+  | 30, risk | Berries | AmberDragonfly |
+  | 50, secret (100 reward instance, scale 1.5, max 1 per level) | GoldenAcorn | SunkenCoin |
 - **Room fruit formula:** apples = main-route beats; +1 Orange per optional move; +1 Cherries per optional threat; +1 Melon per secret; +1 Kiwi per side branch; Bananas only as trails.
-- **Kill values:** Crab 10, Mushroom 10, Bat 20, Lizard 20, Crystal Lizard 20, Trunk 20, Plant 20, Eye 30, Black Bat 30, Crystal Bat 30, Warden 100 (instance override), Angry Pig 10 (not calibrated).
-- **New enemy formula:** 10 × **fewest charged hits to kill** (Full 3 / Partial 2 dmg) + bonus: ranged **+10**, chaser **+20**, plain flier +0. Checks: Crab 1 hit = 10 · Bat full+partial = 20 · Lizard / Crystal Lizard / Trunk / Plant 1 + ranged = 20 · Eye / Black Bat / Crystal Bat 1 + chaser = 30 · Pig / Mushroom 1 = 10. Mini-bosses use an instance override (Warden 100).
+- **Kill values:** Crab 10, Mushroom 10, Slime 10, Snail 20, Bat 20, Lizard 20, Crystal Lizard 20, Trunk 20, Plant 20, Eye 30, Black Bat 30, Crystal Bat 30, Warden 100 (instance override), Angry Pig 10 (not calibrated).
+- **New enemy formula:** 10 × **fewest charged hits to kill** (Full 3 / Partial 2 dmg) + bonus: ranged **+10**, chaser **+20**, defensive **+10** (user-approved 2026-11-02), plain flier +0. Checks: Crab 1 hit = 10 · Bat full+partial = 20 · Lizard / Crystal Lizard / Trunk / Plant 1 + ranged = 20 · Eye / Black Bat / Crystal Bat 1 + chaser = 30 · Pig / Mushroom / Slime 1 = 10 · Snail 1 + defensive = 20. Mini-bosses use an instance override (Warden 100).
 - No-damage room bonus: 50 in L1, +25 per level, cap 150 [PLAN].
 - **Score survives death; a kill scores once** (`bScoreAwarded`).
 - **Level budget:** L1 ≈ 1030 (actual 970, −6 %); ×1.3 per level to L5 → **L2 1340, L3 1740, L4 2260, L5 2940**; then **plateau +50/level → L6 3000 … L12 3300** (locked point values + fixed room size cap a room at ~1000–1100; verify in L3/L4). [LOCKED 2026-10-07]
@@ -161,7 +174,7 @@ Compare rooms **relative to each other**. Absolute times depend on the tester's 
 | M1 | 300 | +1 max HP + full heal | LIVE (`GM_Action.Prize1Score`) |
 | M2 | 800 | Spread Shot (regular shots only) | LIVE |
 | M3 | 1500 | Full charge 1.8 → 1.2 s | LIVE |
-| M4 | 2500 | +1 max HP (→ 12) | PLAN (before Level 3; needs HUD heart slots, see §2.6) |
+| M4 | 2500 | +1 max HP (→ 12) | LIVE (`GM_Action.Prize4Score`; GrantPrize + ShowPrize map index 3 → 0, so it reuses the +1 HP prize and banner; user-verified 2026-11-04) |
 | M5 | 3800 | new weapon (e.g. Pierce Shot) | PLAN |
 | M6 | 5500 | +1 max HP (→ 13) | PLAN |
 | M7 | 7500 | Full charge 1.2 → 0.9 s | PLAN |
@@ -223,6 +236,8 @@ Clean tester times; scores = MAX budgets; "Prize reached" = the milestone the av
 | Room centre | X = **1248 + 2560·room**, Z = **−704** |
 | L1 tilemap | `/Game/PaperAssets/Environment/Level_1/TM_Stage_1` |
 | L2 tilemap | `/Game/PaperAssets/Environment/Level_2/TM_Level2` |
+| L3 tilemap | `/Game/PaperAssets/Environment/Level_3/TM_Level3` |
+| L4 tilemap | `/Game/PaperAssets/Environment/Level_4/TM_Level4` |
 | Tilesets | each level = part of `TS_L1_Terrain` + its own level tiles |
 | Backdrop | sRGB **#8F7C99**, cube `S{L}_Backdrop` at Y −300 (linear 0.2833/0.2087/0.3327) |
 
@@ -243,7 +258,7 @@ Clean tester times; scores = MAX budgets; "Prize reached" = the milestone the av
 | +2.5 | Player sprite (`BP_Player` Sprite0; in front of enemies, pickups, saws; behind ZzzBubble +3). WORLD Y: the Tick sets relative Y = `PlayerSpriteDepthY` × forward X, so it stays +2.5 when the actor turns 180° (facing left). Toggle `bPlayerSpriteInFront` (off = old baseline rel 0.05). User-approved 2026-10-19 (Prompt 01 option D) |
 | +1.1 | Saw sprites (`BP_Trap_Saw` Sprite/SpriteOff rel Y 1.1, in front of pickups to stop z-fighting); user-approved 2026-10-08 |
 | +1 | Pickups, other trap sprites, WaterDrip |
-| +0.04 … +2.0 | Enemies: a random value per instance at BeginPlay (anti z-fighting). The range spans +1, so an enemy may draw in front of or behind pickups/saws, but always BEHIND the player (+2.5); an exact Y tie is practically impossible |
+| +0.04 … +0.98 | Enemies: `BP_Enemy_BASE` BeginPlay adds a random actor Y offset = RandomInt(2..49) × 0.02 (anti z-fighting, 48 steps). Always BEHIND pickups/other traps (+1), saws (+1.1) and the player (+2.5); in front of tile decoration (+0.03) and shimmer (+0.02). Synced to the live graph 2026-10-28 (Min 1 → 2 to avoid a +0.02 tie with shimmer; was documented as +0.04 … +2.0) |
 | +0.03 | Decoration flipbooks on tiles (e.g. `S2_R0_VFX_CrystalPulse_01`); in front of shimmer overlays |
 | +0.02 | Tile shimmer overlays (`BP_VFX_TileShimmer`) |
 | 0 … −8 | Tilemap layers |
@@ -270,7 +285,7 @@ Gameplay actors at **world Y = 0**; movement plane-constrained (normal Y, `SnapT
 | Jumps | JumpMaxCount **2**, hold 0.172 |
 | Air | AirControl 1.0, FallingLateralFriction 50 |
 | Wall slide | speed −20, traces 40/55 (BoxTrace 1,1,24), flush snap |
-| Health | MaxHealth **10**; HUD has **11** heart slots (enough for M1). **[PLAN]** grow the HUD to **14** slots (HP cap 14) before M4 (12 HP) goes live |
+| Health | MaxHealth **10**; HUD has **14** heart slots (HP cap 14; Image_9 keeps the 12 px bonus gap, Image_10–12 left pad 4) |
 | Shooting | ShootEnergy 3, PartialCharge 0.8 s, FullCharge **1.8 s** |
 | I-frames | `InvicibilityDuration` 1.5 s, flicker 0.12 s; `bIsInvincible` gates BP_Player AnyDamage (FallDetector exempt); at i-frame end Spikes/Saw still overlapping re-trigger (`OnPlayerTriggered`) (2026-10-25); restore order = Set `bIsInvincible` false → capsule Pawn → Overlap → trap loop, so an enemy/spike still overlapping hits again right away (fix D, user-verified 2026-10-25; never set the flag after the collision restore) |
 | Damage debug | `bDamageDebug` (Debug, default **off**, dev only): Tick draws the player capsule GREEN = hittable / RED = i-frames; AnyDamage prints "DMG x by <causer> \| invincible (blocked)=…" (screen + log). Other hitboxes: PIE console `show Collision`. Keep OFF in calibration runs. Never replace with Python draws (§4 quirk) (2026-10-25) |
@@ -283,6 +298,8 @@ Gameplay actors at **world Y = 0**; movement plane-constrained (normal Y, `SnapT
 | Trunk (L3) | 54/40 | walk 120 | 3 | 20 | walking shooter (Crab duplicate, AIC_Base); per-instance sight/interval per §1.3 curve; shoots only within height |dz| ≤ 96 (also when aggroed); idles `EdgeIdleTime` 1.0 s (per instance) at ledges + walls, then turns (not if it already turned to face the player); Hit anim; aggro when hit; bullet → BP_VFX_TrunkBulletPieces |
 | Mushroom (L3) | 40/40 | walk 120 | 3 | 10 | plain walker (Trunk duplicate, shooting removed); idles `EdgeIdleTime` 1.0 s (per instance) at ledges + walls, then turns (not if a hit already turned it); Hit anim; aggro when hit = turns once to face the player (no AggroDuration, 2026-10-11); art faces left → sprite X −1; L3 walker (R0 low corridors/tunnel) |
 | Plant (L3) | 64/40 | stationary turret | 3 | 20 | Trunk duplicate without walking/ledge/wall detectors; FIXED direction = instance yaw (0 right, 180 left), shoots only at a player in front (forward dot > 0) within |dz| ≤ 96; per-instance sight/interval per §1.3 curve; FireDelay 0.27 (Attack frame 4), AttackRecover 0.27; Hit anim; aggro when hit (range only); bullet → BP_VFX_PlantBulletPieces; art faces left → sprite X −1 |
+| Slime (L4) | 48/48 | walk 120 | 3 | 10 | L4 new enemy (user-approved 2026-11-02); plain walker (Mushroom duplicate): `EdgeIdleTime` 1.0 s at ledges + walls, turns once to face the player when hit; Idle/Run share one 10-frame sheet (Idle 10 fps, Run 15 fps); Sprite0 rel Z 10, LedgeDetector (45,0,−43); cosmetic trail: every `TrailInterval` 0.3 s while moving spawns BP_VFX_SlimeTrail at WORLD Y 0.03 (decoration band, absolute because the base randomizes enemy Y), floor Z = actor −40, life 1.5 s; art faces left → sprite X −1 |
+| Snail (L4) | 44/44 | walk 90 | 3 | 20 | L4 shell guard (Mushroom duplicate, user-approved 2026-11-02): a surviving hit → Hit anim → shell `ShellDuration` 2 s (bCanBeDamaged false, blocked shots flash ShellWallHit); a Full charge pierces the shell (`PierceDamage` 3) and also kills it outright before any shell; art faces left → sprite X −1 |
 | Crab | 45/45 | walk 120 | 3 | 10 | AIC_Crab, ledge/wall turn |
 | Angry Pig | 45/45 | MaxWalk 260 run; calm ×0.46 ≈ 120 | 3 | 10 | idles 1 s at edges; Hit1 → run; killing hit → Hit2 → hop 1000 → falls off the map; DeathDelay 1.3, no poof; sprite scale X −1 |
 | Bat | 60/34 | bob, MovePlayRate 0.8 | 5 | 20 | |
@@ -291,9 +308,9 @@ Gameplay actors at **world Y = 0**; movement plane-constrained (normal Y, `SnapT
 | Crystal Bat (L2) | 60/43 | Eye chase, fly 400 | **3** | 30 | child of BlackBat → Eye; AggroRange sized per corridor; CDO Score set 20 → 30 on 2026-10-05 (placed instances were already 30) |
 | Lizard | 45/34 | shooter | 3 | 20 | interval 3, sight 600, reaction 0.3, LOS, turns to face |
 | Crystal Lizard (L2) | 45/34 | shooter | 3 | 20 | child of BP_Enemy_Lizard (recolour); own ABP + CrystalIdle/CrystalShoot, ShootFireball overridden (DefaultSlot); L2 R2 Lizard_01 + Warden use it; projectile art still orange |
-| Warden | Lizard ×1.3 | | 8 | 100 | interval 2.0, range 1100; L2 Warden = Crystal Lizard instance |
+| Warden | Lizard ×1.3 | | 8 (L3–4: 12) | 100 | interval 2.0, range 1100; L2 Warden = Crystal Lizard instance; L3 Warden = Trunk instance, HitStunCooldown 1.5 |
 - Projectile damage: Regular 1 · Partial 2 · Full 3 · Lizard 1. No projectile lifespan; "aggro when hit" is L3+ only (§1.3), L1/L2 enemies have none.
-- Traps (BP_Trap_BASE → `OnPlayerTriggered`): Saw dmg 1, speed 150, dist 300; FallingPlatform FallDelay 0.5, FallSpeed 800, RespawnDelay 3, one-way; **Spikes** (`BP_Trap_Spikes`, L2+) dmg 1, 1 tile, box 26/16/14 at z −18, ApplyDamage + Self causer; FallDetector = instant death; WinDetector `Level Name` → next map.
+- Traps (BP_Trap_BASE → `OnPlayerTriggered`): Saw dmg 1, speed 150, dist 300; FallingPlatform FallDelay 0.5, FallSpeed 800, RespawnDelay 3, one-way; **Spikes** (`BP_Trap_Spikes`, L2+) dmg 1, 1 tile, box 26/16/14 at z −18, ApplyDamage + Self causer; FallDetector = instant death; WinDetector `Level Name` → next map; **Marsh Vent** (`BP_Trap_MarshVent`, L4+, 1 threat, no damage): actor origin on the floor, cycle Idle 1.6 / Warn 0.7 / Erupt 0.7 s, `StartOffset` per instance, launches the player once per eruption (`LaunchSpeed` 1900; rise = speed² / 10780).
 - **WinDetector level-end flag** [LIVE 2026-10-09]: `BP_WinDetector` has a `Flag` flipbook component (visible in the editor for placement, hidden at BeginPlay). Reveal = player's `CurrentRoomIndex` == the WinDetector's room AND camera slide done (`RoomTransitionAlpha >= 1`) → `RevealDelay` (0.5 s, per instance) → `FB_Level_Finished_Flag_Out` once (1.73 s) → `FB_Level_Finished_Flag_Idle` looping. Shown once per level (`bFlagShown`). Art in `/Game/PaperAssets/Props/LevelFinished`. Never set the flipbook/visibility on placed instances; move only the Flag component.
 - **Level 2 live tweaks** (2026-10-05): Saw speed **200**, FallDelay **0.35**, Crystal Crab walk 150.
 - BP_Enemy_BASE opt-in knobs: `DeathDelay` 0, `bSpawnDestroyVFX` true, `TurnCooldown` 0.15 (+`bPendingTurn`), `ScoreValue`, `bScoreAwarded`.
@@ -340,7 +357,7 @@ Cause: the plugin runs tool calls mid-world-tick.
 
 **Must:** every run_python mutation inside a one-shot `register_slate_post_tick_callback` (work on tick ≥2, unregister, `unreal.log` + Grep `Saved/Logs/WhateverPlatformer.log`) · deferred compile only for NEW BPs without instances · save before risky steps · one logical change per call · graph tools are safe · **crash protocol:** read `Saved/Crashes` + `Saved/Logs`, record the cause, never repeat the failed method.
 
-**Quirks:** focus switch = deferred `close_all_editors_for_asset` (tick 1) + `open_editor_for_assets` (tick 3); if the plugin context stays stuck (graph tools: "No Blueprint is currently focused"), the user closes the BP tab and re-opens it from the Content Browser (2026-10-11) · object-pin defaults read "" but work (check `asset_get_dependencies`) · generic var keys resolve to the last search (verify; ambiguous titles can pick the wrong node) · impossible via tools: parent-call nodes, timeline tracks, PaperZD state machines, object/enum vars, custom-event params, `GetComponentByClass` class pin · Python can't read `EdGraph.Nodes`/`Blueprint.Status` · Python collision changes need `body_instance` + profile · attaching to BP components isn't saved · `del` Python globals + `gc.collect()` before deleting assets · session-rendered materials can't be deleted until a restart · tilemap edit pipeline: make editable → set_tile → layers into the asset → set_tile_map → empty the instance + rename into `/Engine/Transient` → save · PIE bot via `EnhancedInputLocalPlayerSubsystem` injection, only when asked; label bot-caused errors · Claude can't write project files from the editor session (Write is denied): Claude gives full path + content and the user saves it · deleting/replacing a placed enemy in the editor spawns a BP_VFX_EnemyDestroyed poof that stays in the map → after any enemy swap/delete, list_actors "EnemyDestroyed" and delete the leftovers · editing a BP component template via Python (SubobjectDataSubsystem) does NOT update already-placed instances (even after compile) → also set the instances, then verify world values · on placed BP actors, `set_editor_property` on a component reruns the construction script and swaps components mid-loop → use component functions (`set_relative_location`, `set_flipbook`, `set_visibility`) instead. · on Crab-derived enemies (Crab, Trunk, Mushroom) the PaperZD comp owns the sprite playback, so flipbooks only animate through the Tick's manual `SetPlaybackPosition` sync → to stop movement (pauses, idles), gate `WalkForward`, never the Tick/playback sync · PaperSpriteFactory properties are not exposed to Python → make sprite frames by duplicating an existing sprite and setting `source_texture` / `source_dimension` / `source_uv` and ALSO set source_texture_dimension to the real texture size, or UE rescales the frames on the next editor load · `set_variable_config` category changes report success but don't apply (cosmetic; rename by hand). · **PIE debug/monitor crash** (2026-10-25, BitArray.h:1418 assert on stop_pie): a PERSISTENT Python post-tick callback that calls `draw_debug_*` on the PIE world / binds Python callables to actor delegates (`on_take_any_damage`) / drives a bot that keeps throwing errors every frame → races the render thread during PIE teardown → editor dies. Bypass: never `draw_debug_*` or delegate binds from Python; debug visuals = a dev-only Blueprint flag (draws run inside the world tick); Python PIE monitors only read + log (like the calibration monitor), stop themselves on the first exception, and are UNREGISTERED before `stop_pie` (or let the user stop PIE).
+**Quirks:** focus switch = deferred `close_all_editors_for_asset` (tick 1) + `open_editor_for_assets` (tick 3); if the plugin context stays stuck (graph tools: "No Blueprint is currently focused"), the user closes the BP tab and re-opens it from the Content Browser (2026-10-11) · object-pin defaults read "" but work (check `asset_get_dependencies`) · generic var keys resolve to the last search (verify; ambiguous titles can pick the wrong node) · impossible via tools: parent-call nodes, timeline tracks, PaperZD state machines, object/enum vars, custom-event params, `GetComponentByClass` class pin · Python can't read `EdGraph.Nodes`/`Blueprint.Status` · Python collision changes need `body_instance` + profile · attaching to BP components isn't saved · `del` Python globals + `gc.collect()` before deleting assets · session-rendered materials can't be deleted until a restart · tilemap edit pipeline: make editable → set_tile → layers into the asset → set_tile_map → empty the instance + rename into `/Engine/Transient` → save · PIE bot via `EnhancedInputLocalPlayerSubsystem` injection, only when asked; label bot-caused errors · Claude can't write project files from the editor session (Write is denied): Claude gives full path + content and the user saves it · deleting/replacing a placed enemy in the editor spawns a BP_VFX_EnemyDestroyed poof that stays in the map → after any enemy swap/delete, list_actors "EnemyDestroyed" and delete the leftovers · editing a BP component template via Python (SubobjectDataSubsystem) does NOT update already-placed instances (even after compile) → also set the instances, then verify world values · on placed BP actors, `set_editor_property` on a component reruns the construction script and swaps components mid-loop → use component functions (`set_relative_location`, `set_flipbook`, `set_visibility`) instead. · on Crab-derived enemies (Crab, Trunk, Mushroom) the PaperZD comp owns the sprite playback, so flipbooks only animate through the Tick's manual `SetPlaybackPosition` sync → to stop movement (pauses, idles), gate `WalkForward`, never the Tick/playback sync · PaperSpriteFactory properties are not exposed to Python → make sprite frames by duplicating an existing sprite and setting `source_texture` / `source_dimension` / `source_uv` and ALSO set source_texture_dimension to the real texture size, or UE rescales the frames on the next editor load · `set_variable_config` category changes report success but don't apply (cosmetic; rename by hand). · **PIE debug/monitor crash** (2026-10-25, BitArray.h:1418 assert on stop_pie): a PERSISTENT Python post-tick callback that calls `draw_debug_*` on the PIE world / binds Python callables to actor delegates (`on_take_any_damage`) / drives a bot that keeps throwing errors every frame → races the render thread during PIE teardown → editor dies. Bypass: never `draw_debug_*` or delegate binds from Python; debug visuals = a dev-only Blueprint flag (draws run inside the world tick); Python PIE monitors only read + log (like the calibration monitor), stop themselves on the first exception, and are UNREGISTERED before `stop_pie` (or let the user stop PIE). · Python edits of a child BP's INHERITED component hit the PARENT template (path `BP_Parent_C:Comp_GEN_VARIABLE`); check `get_path_name()` contains the child, inherited overrides = the user's hand step (2026-11-02) · a new BP component's bound overlap event isn't offered by search_node_actions before compile; poll `IsOverlappingActor` from Tick instead (2026-11-03) · exception to "Claude can't write project files": `SourceArt/_tools/sourceart_write.py` writes inside `SourceArt` only (user-approved 2026-10-28)
 
 ---
 
